@@ -6,7 +6,7 @@
 每次執行會先從 GitHub 拉最新版程式（加 --no-pull 可跳過）。
 
 用法：
-    python3 點兩下產生請款單.py                 # 處理「上個月、本月、下個月」三個月份資料夾
+    python3 點兩下產生請款單.py                 # 處理 2026-01 以及「上個月、本月、下個月」
     python3 點兩下產生請款單.py 2026-01         # 只處理指定月份（可一次給多個）
     python3 點兩下產生請款單.py 2026-01 --no-overwrite   # 已存在時另存為 01月(自動產出).xlsx（預設直接覆蓋）
 
@@ -40,6 +40,8 @@ from openpyxl.utils import get_column_letter
 BASE_DIR = Path(__file__).resolve().parent
 DISCOUNT_FILE = BASE_DIR / "客戶折讓表.xlsx"
 INPUT_DIR_NAME = "輸入"
+# 不指定月份時，除了上月/本月/下月之外，一定會跑的月份
+ALWAYS_MONTHS = ["2026-01"]
 
 COMPANY_TITLE = "通進加油站股份有限公司－－－主成加油站"
 COMPANY_ADDR = "台東縣太麻里鄉美和村美和86之31號　　TEL：089-515915"
@@ -584,7 +586,7 @@ def process_month(month_str, discount_table, overwrite=True):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="產生中油客戶請款單")
-    ap.add_argument("months", nargs="*", help="要處理的月份 YYYY-MM；不給則處理上月/本月/下月")
+    ap.add_argument("months", nargs="*", help="要處理的月份 YYYY-MM；不給則處理 2026-01 與上月/本月/下月")
     ap.add_argument("--overwrite", dest="overwrite", action="store_true", default=True,
                     help="輸出檔已存在時直接覆蓋（預設）")
     ap.add_argument("--no-overwrite", dest="overwrite", action="store_false",
@@ -595,7 +597,7 @@ def main(argv=None):
     if not args.no_pull:
         pull_latest_and_reexec()
 
-    months = args.months or months_around_today()
+    months = args.months or list(dict.fromkeys(ALWAYS_MONTHS + months_around_today()))
     for m in months:
         if not re.fullmatch(r"\d{4}-\d{2}", m):
             sys.exit(f"月份格式錯誤：{m}（應為 YYYY-MM）")

@@ -6,7 +6,7 @@ credit-account exports (簽帳客戶對帳單) of the CPC system. Excel in, Exce
 ## Usage
 
 ```bash
-python3 點兩下產生請款單.py              # previous, current and next month
+python3 點兩下產生請款單.py              # 2026-01 plus previous, current and next month
 python3 點兩下產生請款單.py 2026-01      # one or more specific months
 python3 點兩下產生請款單.py 2026-01 --no-overwrite   # keep an existing 01月.xlsx
 python3 點兩下產生請款單.py --no-pull    # skip the automatic git pull
