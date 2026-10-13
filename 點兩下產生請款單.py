@@ -30,6 +30,7 @@ import os
 import re
 import subprocess
 import sys
+import traceback
 from collections import defaultdict
 from pathlib import Path
 
@@ -546,7 +547,9 @@ def pull_latest_and_reexec():
     if _file_hash(__file__) != before:
         print("[更新] 程式已更新為最新版，重新執行…")
         sys.stdout.flush()
-        os.execv(sys.executable, [sys.executable, __file__, *sys.argv[1:], "--no-pull"])
+        # 用子程序重跑新版（Windows 的 os.execv 會讓視窗提前關閉，所以改用 subprocess）
+        code = subprocess.call([sys.executable, __file__, *sys.argv[1:], "--no-pull"])
+        sys.exit(code)
     else:
         print("[更新] 已是最新版")
 
@@ -592,6 +595,7 @@ def main(argv=None):
     ap.add_argument("--no-overwrite", dest="overwrite", action="store_false",
                     help="輸出檔已存在時改存為「MM月(自動產出).xlsx」")
     ap.add_argument("--no-pull", action="store_true", help="執行前不從 GitHub 拉最新版")
+    ap.add_argument("--no-pause", action="store_true", help="結束時不等待按鍵（Windows 預設會等待）")
     args = ap.parse_args(argv)
 
     if not args.no_pull:
@@ -606,5 +610,31 @@ def main(argv=None):
         process_month(m, discount_table, overwrite=args.overwrite)
 
 
+def pause_if_needed(argv):
+    """Windows 點兩下執行時，視窗會在程式結束後立刻關閉；先等使用者按鍵再結束"""
+    if "--no-pause" in argv or "--no-pull" in argv:
+        # --no-pull 代表這是自動更新後重跑的子程序，由父程序負責等待
+        return
+    if sys.platform == "win32" and sys.stdin and sys.stdin.isatty():
+        try:
+            input("\n按 Enter 鍵關閉視窗…")
+        except EOFError:
+            pass
+
+
 if __name__ == "__main__":
-    main()
+    # Windows 主控台編碼可能不是 UTF-8，遇到印不出的字元以 ? 取代，不要讓程式當掉
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
+    try:
+        main()
+    except SystemExit as e:
+        if isinstance(e.code, str):
+            print(f"[錯誤] {e.code}")
+        elif e.code not in (0, None):
+            print(f"[結束] 程式以錯誤代碼 {e.code} 結束")
+    except Exception:
+        print("[錯誤] 程式執行時發生錯誤：")
+        traceback.print_exc()
+    pause_if_needed(sys.argv[1:])

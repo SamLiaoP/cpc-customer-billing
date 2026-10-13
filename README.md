@@ -10,10 +10,12 @@ python3 點兩下產生請款單.py              # 2026-01 plus previous, curren
 python3 點兩下產生請款單.py 2026-01      # one or more specific months
 python3 點兩下產生請款單.py 2026-01 --no-overwrite   # keep an existing 01月.xlsx
 python3 點兩下產生請款單.py --no-pull    # skip the automatic git pull
+python3 點兩下產生請款單.py --no-pause   # Windows: do not wait for Enter before closing
 ```
 
 Every run first does `git pull` so the script is always the latest version; if the script
-itself was updated it restarts with the new version.
+itself was updated it restarts with the new version. On Windows the console waits for Enter
+before closing so the messages stay visible.
 
 ## Folder layout
 
