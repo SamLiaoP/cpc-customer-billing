@@ -543,6 +543,7 @@ def pull_latest_and_reexec():
         return
     if _file_hash(__file__) != before:
         print("[更新] 程式已更新為最新版，重新執行…")
+        sys.stdout.flush()
         os.execv(sys.executable, [sys.executable, __file__, *sys.argv[1:], "--no-pull"])
     else:
         print("[更新] 已是最新版")
@@ -605,5 +606,3 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
-
-# test marker
